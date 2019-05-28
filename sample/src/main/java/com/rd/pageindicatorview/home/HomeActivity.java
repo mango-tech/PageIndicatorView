@@ -1,12 +1,16 @@
 package com.rd.pageindicatorview.home;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.viewpager.widget.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
+
 import com.rd.PageIndicatorView;
 import com.rd.pageindicatorview.base.BaseActivity;
 import com.rd.pageindicatorview.customize.CustomizeActivity;
@@ -22,10 +26,25 @@ public class HomeActivity extends BaseActivity {
     private PageIndicatorView pageIndicatorView;
     private Customization customization;
 
+    public static Intent launchWithViewPager(Context context) {
+        return new Intent(context, HomeActivity.class).putExtra("init_with_view_pager", true);
+    }
+
+    public static Intent launchWithViewPager2(Context context) {
+        return new Intent(context, HomeActivity.class).putExtra("init_with_view_pager_2", true);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ac_home);
+        if(getIntent().getBooleanExtra("init_with_view_pager", false)) {
+            setContentView(R.layout.ac_home_vp);
+        }
+
+        if(getIntent().getBooleanExtra("init_with_view_pager_2", false)) {
+            setContentView(R.layout.ac_home_vp2);
+        }
+
         customization = new Customization();
 
         initToolbar();
@@ -34,6 +53,7 @@ public class HomeActivity extends BaseActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
         boolean customization = requestCode == CustomizeActivity.EXTRAS_CUSTOMIZATION_REQUEST_CODE && resultCode == RESULT_OK;
         if (customization && intent != null) {
             this.customization = intent.getParcelableExtra(CustomizeActivity.EXTRAS_CUSTOMIZATION);
@@ -61,11 +81,17 @@ public class HomeActivity extends BaseActivity {
 
     @SuppressWarnings("ConstantConditions")
     private void initViews() {
-        HomeAdapter adapter = new HomeAdapter();
-        adapter.setData(createPageList());
+        final Object pager = findViewById(R.id.viewPager);
+        if(pager instanceof ViewPager) {
+            HomePagerAdapter homePagerAdapter = new HomePagerAdapter();
+            homePagerAdapter.setData(createPageList());
 
-        final ViewPager pager = findViewById(R.id.viewPager);
-        pager.setAdapter(adapter);
+            ((ViewPager) pager).setAdapter(homePagerAdapter);
+        } else if(pager instanceof ViewPager2) {{
+            HomeAdapter homeAdapter = new HomeAdapter();
+            homeAdapter.setData(createPageList());
+            ((ViewPager2) pager).setAdapter(homeAdapter);
+        }}
 
         pageIndicatorView = findViewById(R.id.pageIndicatorView);
     }
