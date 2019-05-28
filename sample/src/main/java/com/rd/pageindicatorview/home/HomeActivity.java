@@ -23,26 +23,33 @@ import java.util.List;
 
 public class HomeActivity extends BaseActivity {
 
+    private static final String EXTRAS_PAGER = "pager";
+    private static final int VALUE_VIEW_PAGER = 0;
+    private static final int VALUE_VIEW_PAGER2 = 1;
+
     private PageIndicatorView pageIndicatorView;
     private Customization customization;
 
     public static Intent launchWithViewPager(Context context) {
-        return new Intent(context, HomeActivity.class).putExtra("init_with_view_pager", true);
+        return new Intent(context, HomeActivity.class).putExtra(EXTRAS_PAGER, VALUE_VIEW_PAGER);
     }
 
     public static Intent launchWithViewPager2(Context context) {
-        return new Intent(context, HomeActivity.class).putExtra("init_with_view_pager_2", true);
+        return new Intent(context, HomeActivity.class).putExtra(EXTRAS_PAGER, VALUE_VIEW_PAGER2);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(getIntent().getBooleanExtra("init_with_view_pager", false)) {
-            setContentView(R.layout.ac_home_vp);
-        }
-
-        if(getIntent().getBooleanExtra("init_with_view_pager_2", false)) {
-            setContentView(R.layout.ac_home_vp2);
+        switch (getIntent().getIntExtra(EXTRAS_PAGER, -1)) {
+            case VALUE_VIEW_PAGER:
+                setContentView(R.layout.ac_home_vp);
+                break;
+            case VALUE_VIEW_PAGER2:
+                setContentView(R.layout.ac_home_vp2);
+                break;
+            default:
+                finish();
         }
 
         customization = new Customization();
@@ -79,7 +86,6 @@ public class HomeActivity extends BaseActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void initViews() {
         final Object pager = findViewById(R.id.viewPager);
         if(pager instanceof ViewPager) {
