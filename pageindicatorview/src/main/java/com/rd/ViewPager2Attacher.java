@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-class ViewPager2Attacher implements PageIndicatorView.PagerAttacher<ViewPager2> {
+class ViewPager2Attacher implements PageIndicatorView.PagerAttacher {
 
     private RecyclerView.AdapterDataObserver adapterDataObserver;
     private ViewPager2.OnPageChangeCallback onPageChangeCallback;
@@ -19,11 +19,19 @@ class ViewPager2Attacher implements PageIndicatorView.PagerAttacher<ViewPager2> 
 
     private ScrollActionsListener listener;
 
-    @Override
-    public void attachToPager(@NonNull final ScrollActionsListener listener, @NonNull ViewPager2 pager, boolean isDynamicCount) {
-        this.listener = listener;
-        this.adapter = pager.getAdapter();
+    public ViewPager2Attacher(@NonNull ViewPager2 pager) {
         this.viewPager = pager;
+        this.adapter = pager.getAdapter();
+    }
+
+    @Override
+    public int getId() {
+        return viewPager.getId();
+    }
+
+    @Override
+    public void attachToPager(@NonNull final ScrollActionsListener listener, boolean isDynamicCount) {
+        this.listener = listener;
 
         registerObserver();
 
@@ -54,7 +62,7 @@ class ViewPager2Attacher implements PageIndicatorView.PagerAttacher<ViewPager2> 
         };
 
         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
-        pager.setOnTouchListener(onTouchListener);
+        viewPager.setOnTouchListener(onTouchListener);
     }
 
     @Override
@@ -62,6 +70,11 @@ class ViewPager2Attacher implements PageIndicatorView.PagerAttacher<ViewPager2> 
         unregisterObserver();
         viewPager.unregisterOnPageChangeCallback(onPageChangeCallback);
         viewPager.setOnTouchListener(null);
+    }
+
+    @Override
+    public boolean isAttached() {
+        return viewPager != null;
     }
 
     @Override

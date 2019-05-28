@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-class ViewPagerAttacher implements PageIndicatorView.PagerAttacher<ViewPager> {
+class ViewPagerAttacher implements PageIndicatorView.PagerAttacher {
 
     private DataSetObserver dataSetObserver;
     private ViewPager.OnPageChangeListener onPageChangeListener;
@@ -20,11 +20,19 @@ class ViewPagerAttacher implements PageIndicatorView.PagerAttacher<ViewPager> {
 
     private ScrollActionsListener listener;
 
-    @Override
-    public void attachToPager(@NonNull final ScrollActionsListener listener, @NonNull ViewPager pager, final boolean isDynamicCount) {
-        this.listener = listener;
-        this.adapter = pager.getAdapter();
+    public ViewPagerAttacher(@NonNull ViewPager pager) {
         this.viewPager = pager;
+        this.adapter = pager.getAdapter();
+    }
+
+    @Override
+    public int getId() {
+        return viewPager.getId();
+    }
+
+    @Override
+    public void attachToPager(@NonNull final ScrollActionsListener listener, final boolean isDynamicCount) {
+        this.listener = listener;
 
         registerObserver();
 
@@ -68,9 +76,9 @@ class ViewPagerAttacher implements PageIndicatorView.PagerAttacher<ViewPager> {
             }
         };
 
-        pager.addOnPageChangeListener(onPageChangeListener);
-        pager.addOnAdapterChangeListener(onAdapterChangeListener);
-        pager.setOnTouchListener(onTouchListener);
+        viewPager.addOnPageChangeListener(onPageChangeListener);
+        viewPager.addOnAdapterChangeListener(onAdapterChangeListener);
+        viewPager.setOnTouchListener(onTouchListener);
 
     }
 
@@ -82,6 +90,10 @@ class ViewPagerAttacher implements PageIndicatorView.PagerAttacher<ViewPager> {
         viewPager.setOnTouchListener(null);
     }
 
+    @Override
+    public boolean isAttached(){
+        return viewPager != null;
+    }
     @Override
     public void registerObserver() {
         if (dataSetObserver != null || adapter == null) {

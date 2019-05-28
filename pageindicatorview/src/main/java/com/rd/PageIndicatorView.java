@@ -42,7 +42,7 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
 
     private IndicatorManager manager;
 
-    private PagerAttacher<?> currentPager;
+    private PagerAttacher currentPager;
     private boolean isInteractionEnabled;
 
     public PageIndicatorView(Context context) {
@@ -182,7 +182,7 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
      * Dynamic count will automatically update number of circle indicators
      * if {@link ViewPager} page count updates on run-time. If new count will be bigger than current count,
      * selected circle will stay as it is, otherwise it will be set to last one.
-     * Note: works if {@link ViewPager} set and already have it's adapter. See {@link #setViewPager(ViewPager)}.
+     * Note: works if {@link ViewPager} set and already have it's adapter. See {@link #setViewPager(PagerAttacher)}.
      *
      * @param dynamicCount boolean value to add/remove indicators dynamically.
      */
@@ -488,7 +488,7 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
     /**
      * Interactive animation will animate indicator smoothly
      * from position to position based on user's current swipe progress.
-     * (Won't affect on anything unless {@link #setViewPager(ViewPager)} is specified).
+     * (Won't affect on anything unless {@link #setViewPager(PagerAttacher)} is specified).
      *
      * @param isInteractive value of animation to be interactive or not.
      */
@@ -498,40 +498,27 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
     }
 
     /**
-     * Set {@link ViewPager} to add {@link ViewPager.OnPageChangeListener} and automatically
+     * Set {@link PagerAttacher} to add {@link ScrollActionsListener} and automatically
      * handle selecting new indicators (and interactive animation effect if it is enabled).
      *
-     * @param pager instance of {@link ViewPager} to work with
+     * @param pagerAttacher instance of {@link PagerAttacher} to work with
      */
-    @SuppressLint("ClickableViewAccessibility")
-    public void setViewPager(@Nullable ViewPager pager) {
-        releaseViewPager();
-        if (pager == null) {
-            return;
+    public void setViewPager(@NonNull PagerAttacher pagerAttacher) {
+        if(!pagerAttacher.isAttached()) {
+            throw new IllegalStateException("PagerAttacher doesn't have any pager associated");
         }
 
-        attachToViewPager(pager);
-        manager.indicator().setViewPagerId(pager.getId());
-
-        setDynamicCount(manager.indicator().isDynamicCount());
-        updateState();
-    }
-
-    public void setViewPager(@Nullable ViewPager2 pager) {
         releaseViewPager();
-        if (pager == null) {
-            return;
-        }
 
-        attachToViewPager2(pager);
-        manager.indicator().setViewPagerId(pager.getId());
+        attachToPager(pagerAttacher);
+        manager.indicator().setViewPagerId(pagerAttacher.getId());
 
         setDynamicCount(manager.indicator().isDynamicCount());
         updateState();
     }
 
     /**
-     * Release {@link ViewPager} and stop handling events of {@link ViewPager.OnPageChangeListener}.
+     * Release {@link ViewPager} and stop handling events of {@link ScrollActionsListener}.
      */
     public void releaseViewPager() {
         if(currentPager != null) {
@@ -810,9 +797,9 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
 
         if (viewPager != null) {
             if(viewPager instanceof ViewPager){
-                setViewPager(((ViewPager) viewPager));
+                setViewPager(new ViewPagerAttacher((ViewPager) viewPager));
             } else if(viewPager instanceof ViewPager2) {
-                setViewPager(((ViewPager2) viewPager));
+                setViewPager(new ViewPager2Attacher((ViewPager2) viewPager));
             }
         } else {
             findViewPager(viewParent.getParent());
@@ -877,17 +864,9 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
         }
     };
 
-    public void attachToViewPager(@NonNull ViewPager viewPager) {
-        attachToPager(viewPager, new ViewPagerAttacher());
-    }
-
-    public void attachToViewPager2(@NonNull ViewPager2 viewPager) {
-        attachToPager(viewPager, new ViewPager2Attacher());
-    }
-
-    public <T> void attachToPager(@NonNull final T pager, @NonNull final PagerAttacher<T> attacher) {
+    public void attachToPager(@NonNull final PagerAttacher attacher) {
         detachFromPager();
-        attacher.attachToPager(this, pager, manager.indicator().isDynamicCount());
+        attacher.attachToPager(this, manager.indicator().isDynamicCount());
         currentPager = attacher;
     }
 
@@ -900,19 +879,23 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
 
     /**
      * Interface for attaching to pagers.
-     *
-     * @param <T> pager class
      */
-    public interface PagerAttacher<T> {
+    public interface PagerAttacher {
+
+        /**
+         * Returns identifier of view which is attached.
+         *
+         * @return id of Pager attached
+         */
+        int getId();
 
         /**
          * Set up of all needed callbacks to track pager.
          *
          * @param listener callback for listening scroll events
-         * @param pager pager to attach
          * @param isDynamicCount true if pager allows dynamic data sets
          */
-        void attachToPager(@NonNull ScrollActionsListener listener, @NonNull T pager, boolean isDynamicCount);
+        void attachToPager(@NonNull ScrollActionsListener listener, boolean isDynamicCount);
 
         /**
          * Unregister all callbacks previously added to pager and adapter
@@ -920,12 +903,20 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
         void detachFromPager();
 
         /**
-         * Register observer for proper inner <T> adapter.
+         * Checks if any pager has been set before. Always {@link PagerAttacher} should have an
+         * instance of pager initialized.
+         *
+         * @return true if a pager is set, false otherwise.
+         */
+        boolean isAttached();
+
+        /**
+         * Register observer for proper inner adapter.
          */
         void registerObserver();
 
         /**
-         * Unregister observer for proper inner <T> adapter.
+         * Unregister observer for proper inner adapter.
          */
         void unregisterObserver();
 
@@ -938,7 +929,7 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
         int getCurrentItem();
 
         /**
-         * Returns the total number of items in the data set held by inner <T> adapter
+         * Returns the total number of items in the data set held by inner adapter
          *
          * @return The total number of items
          */
