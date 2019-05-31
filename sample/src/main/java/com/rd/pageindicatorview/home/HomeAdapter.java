@@ -1,64 +1,49 @@
 package com.rd.pageindicatorview.home;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.viewpager.widget.PagerAdapter;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.rd.pageindicatorview.sample.R;
+
 import java.util.List;
 
-class HomeAdapter extends PagerAdapter {
+public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
-    private List<View> viewList;
+    private List<View> colors;
 
-    HomeAdapter() {
-        this.viewList = new ArrayList<>();
-    }
-
-    @Override
-    public Object instantiateItem(ViewGroup collection, int position) {
-        View view = viewList.get(position);
-        collection.addView(view);
-        return view;
-    }
-
-    @Override
-    public void destroyItem(ViewGroup collection, int position, Object view) {
-        collection.removeView((View) view);
-    }
-
-    @Override
-    public int getCount() {
-        return viewList.size();
-    }
-
-    @Override
-    public boolean isViewFromObject(View view, Object object) {
-        return view == object;
-    }
-
-    @Override
-    public int getItemPosition(Object object) {
-        return POSITION_NONE;
-    }
-
-    void setData(@Nullable List<View> list) {
-        this.viewList.clear();
-        if (list != null && !list.isEmpty()) {
-            this.viewList.addAll(list);
-        }
-
-        notifyDataSetChanged();
+    public void setData(List<View> colors) {
+        this.colors = colors;
     }
 
     @NonNull
-    List<View> getData() {
-        if (viewList == null) {
-            viewList = new ArrayList<>();
-        }
+    @Override
+    public HomeAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_page, parent, false);
+        return new ViewHolder(view);
+    }
 
-        return viewList;
+    @Override
+    public void onBindViewHolder(@NonNull HomeAdapter.ViewHolder holder, int position) {
+        holder.page.addView(colors.get(position));
+    }
+
+    @Override
+    public int getItemCount() {
+        return colors.size();
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+
+        FrameLayout page;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            page = itemView.findViewById(R.id.layout_page);
+        }
     }
 }
