@@ -701,7 +701,7 @@ public class PageIndicatorView extends View implements IndicatorManager.Listener
 
     @Override
     public void updateState() {
-       if (currentPager == null) {
+       if (!currentPager.isAttached()) {
             return;
         }
 

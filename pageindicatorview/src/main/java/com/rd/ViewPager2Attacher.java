@@ -15,7 +15,7 @@ class ViewPager2Attacher implements PageIndicatorView.PagerAttacher {
     private View.OnTouchListener onTouchListener;
 
     private ViewPager2 viewPager;
-    private RecyclerView.Adapter adapter;
+    private @Nullable RecyclerView.Adapter adapter;
 
     private ScrollActionsListener listener;
 
@@ -74,7 +74,7 @@ class ViewPager2Attacher implements PageIndicatorView.PagerAttacher {
 
     @Override
     public boolean isAttached() {
-        return viewPager != null;
+        return viewPager != null && adapter != null;
     }
 
     @Override

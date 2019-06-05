@@ -92,7 +92,7 @@ class ViewPagerAttacher implements PageIndicatorView.PagerAttacher {
 
     @Override
     public boolean isAttached(){
-        return viewPager != null;
+        return viewPager != null && adapter != null;
     }
     @Override
     public void registerObserver() {
